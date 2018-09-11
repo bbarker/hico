@@ -14,7 +14,7 @@ runHicoGame :: Game e -> IO ()
 runHicoGame game = do
   SDL.initializeAll
   window <- SDL.createWindow "My SDL Application" (windowConfig $ config game)
-  renderer <- SDL.createRenderer window (-1) SDL.defaultRenderer
+  renderer <- SDL.createRenderer window (-1) softwareRendererConfig
   gameLoop renderer game
 
 screenHeight = 480
@@ -42,4 +42,11 @@ windowConfig (GameConfig width height) = WindowConfig
   , windowResizable    = False
   , windowInitialSize  = V2 (fromIntegral width) (fromIntegral height)
   , windowVisible      = True
+  }
+
+softwareRendererConfig :: RendererConfig
+softwareRendererConfig = RendererConfig 
+  {
+    rendererType  = SoftwareRenderer
+  , rendererTargetTexture = False
   }
