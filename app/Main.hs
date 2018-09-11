@@ -1,7 +1,6 @@
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-
 module Main where
 
 import           Hico
@@ -12,24 +11,23 @@ data SomeEnv = SomeEnv {
 
 config' :: GameConfig
 config' = GameConfig {
-  width = 640,
-  height = 480
+  width = 320,
+  height = 240
 }
 
-update' :: SomeEnv -> HaxelProgramF SomeEnv ()
+update' :: SomeEnv -> HicoProgram SomeEnv ()
 update' state = do
   config <- getConfig
-  setState $ state { x = ((x state + 1) `mod` (width config)) }
+  set $ state { x = ((x state + 1) `mod` 16) }
 
-
-draw' :: SomeEnv ->  HaxelProgramF SomeEnv ()
+draw' :: SomeEnv ->  HicoProgram SomeEnv ()
 draw' state = do
-  clear Red
-  rect 10 10 20 20 Green
+  clear Black
+  text 60 42 "HELLO WORLD!" (toEnum $ x state)
 
 exampleGame :: Game SomeEnv
 exampleGame = Game {
-  initial = SomeEnv 1,
+  initial = SomeEnv 0,
   config = config',
   update = update',
   draw = draw'

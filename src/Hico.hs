@@ -1,6 +1,6 @@
 module Hico
-  ( runHicoGame
-  , module Hico.Types
+  ( module Hico.Types
+  , module Hico.Game
   )
 where
 
