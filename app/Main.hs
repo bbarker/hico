@@ -4,6 +4,7 @@
 module Main where
 
 import           Hico
+import qualified SDL  as SDL
 
 data SomeEnv = SomeEnv {
   x :: Int
@@ -17,7 +18,8 @@ config' = GameConfig {
 
 update' :: SomeEnv -> HicoProgram SomeEnv ()
 update' state = do
-  config <- getConfig
+  qPressed <- btnp SDL.KeycodeQ
+  if qPressed then exit else pure ()
   set $ state { x = ((x state + 1) `mod` 16) }
 
 draw' :: SomeEnv ->  HicoProgram SomeEnv ()

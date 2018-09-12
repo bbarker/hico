@@ -3,11 +3,14 @@
 
 module Hico.Game (
     runHicoGame
-  , getConfig
+  , getSDLGameState
   , get
   , set
+  , msg
   , clear
   , text
+  , btnp
+  , exit
 ) where
 
 import           Control.Monad        (forever, void)
@@ -19,7 +22,8 @@ import           Foreign.C.Types        (CInt)
 import           Hico.Types
 import           Prelude                hiding (log)
 import qualified SDL                    as SDL 
-import qualified SDL.Font
+import qualified SDL.Font 
+import Data.Maybe (catMaybes)
 import           System.Exit            (exitSuccess)
 
 runHicoGame :: Game e -> IO ()
@@ -28,15 +32,17 @@ runHicoGame game = do
   SDL.Font.initialize
   window <- SDL.createWindow "My SDL Application" (windowConfig $ config game)
   renderer <- SDL.createRenderer window (-1) softwareRendererConfig
-  gameLoop renderer game
+  font <- SDL.Font.load defaultFontPath 16
+  gameLoop renderer font game
 
 screenHeight = 480
 screenWidth = 640
 
-gameLoop :: SDL.Renderer -> Game e -> IO ()
-gameLoop renderer game @ (Game initial config update draw) = 
-  void $ runHicoSDL renderer config initial op
+gameLoop :: SDL.Renderer -> SDL.Font.Font -> Game e -> IO ()
+gameLoop renderer font game @ (Game initial config update draw) = 
+  void $ State.runStateT op initialGameState 
   where
+    initialGameState = (SDLGameState config renderer font 0 [] initial)
     op = forever $ do
       events <- SDL.pollEvents
       state <- get
@@ -45,32 +51,27 @@ gameLoop renderer game @ (Game initial config update draw) =
       draw updatedState
       
       gameState <- getSDLGameState
-      setSDLGameState $ gameState { _frameCount = (_frameCount gameState) + 1 }
+      setSDLGameState $ gameState { 
+        _frameCount = (_frameCount gameState) + 1,
+        _keysPressed = mapKeysPressed events
+      }
 
       SDL.present renderer
 
-runHicoSDL :: SDL.Renderer
-  -> GameConfig
-  -> state
-  -> HicoProgram state a
-  -> IO (a, SDLGameState state)
-runHicoSDL renderer config initial prg = State.runStateT prg initialGameState where 
-  initialGameState = (SDLGameState config renderer 0 initial)
+mapKeysPressed :: [SDL.Event] -> [Key]
+mapKeysPressed events = catMaybes $ fmap (payloadToKeycode . SDL.eventPayload) events
+  where 
+    payloadToKeycode payload = 
+      case payload of
+        (SDL.KeyboardEvent (SDL.KeyboardEventData _ SDL.Pressed False keysym)) -> 
+          Just $ SDL.keysymKeycode keysym 
+        _ -> Nothing
 
 getSDLGameState :: HicoProgram state (SDLGameState state)
 getSDLGameState = State.get
 
 setSDLGameState :: SDLGameState state -> HicoProgram state ()
 setSDLGameState = State.put
-
-getRenderer :: HicoProgram state SDL.Renderer
-getRenderer = _renderer <$> getSDLGameState
-
-getConfig :: HicoProgram state GameConfig
-getConfig = _config <$> getSDLGameState
-
-getFrameCount :: HicoProgram state Int
-getFrameCount = _frameCount <$> getSDLGameState
 
 get :: HicoProgram state state
 get =  _state <$> getSDLGameState
@@ -80,19 +81,36 @@ set s = do
   gameState <- getSDLGameState
   setSDLGameState $ gameState { _state = s }
 
-log :: String -> HicoProgram state ()
-log = liftIO . putStrLn
+btnp :: Key -> HicoProgram state Bool
+btnp key = do
+  keys <- _keysPressed <$> getSDLGameState
+  pure $ elem key keys 
+
+msg :: String -> HicoProgram state ()
+msg = liftIO . putStrLn
 
 clear :: Color -> HicoProgram state ()
 clear color = do
-  renderer <- getRenderer
+  renderer <- _renderer <$> getSDLGameState
   sdlSetColor renderer color
   sdlClear renderer
 
 text :: Int -> Int -> String -> Color -> HicoProgram state ()
 text x y s c = do
-  renderer <- getRenderer
-  sdlText renderer x y s c
+  renderer <- _renderer <$> getSDLGameState
+  font <- _font <$> getSDLGameState
+  surface <- SDL.Font.solid font c' t'
+  texture   <- SDL.createTextureFromSurface renderer surface
+  (w, h) <- SDL.Font.size font t'
+  let rt = makeRect x y w h in SDL.copy renderer texture Nothing (Just rt)
+  SDL.freeSurface surface
+  SDL.destroyTexture texture
+  where
+    t'  = pack s
+    c'   = colorToRGB c
+
+exit :: HicoProgram state ()
+exit = liftIO exitSuccess
 
 sdlRect :: MonadIO m => SDL.Renderer -> Int -> Int -> Int -> Int -> Color-> m ()
 sdlRect renderer x1 y1 x2 y2 color = SDL.drawRect renderer (Just rect) where
@@ -103,19 +121,6 @@ sdlSetColor renderer color = liftIO $ SDL.rendererDrawColor renderer SDL.$= colo
 
 sdlClear :: MonadIO m => SDL.Renderer -> m ()
 sdlClear renderer = liftIO $ SDL.clear renderer
-
-sdlText :: MonadIO m => SDL.Renderer -> Int -> Int -> String -> Color -> m ()
-sdlText renderer x y text color = do
-  font <- SDL.Font.load defaultFontPath 16
-  surface <- SDL.Font.solid font c t'
-  texture   <- SDL.createTextureFromSurface renderer surface
-  (w, h) <- SDL.Font.size font t'
-  let rt = makeRect x y w h in SDL.copy renderer texture Nothing (Just rt)
-  SDL.freeSurface surface
-  SDL.destroyTexture texture
-  where
-    t'  = pack text
-    c   = colorToRGB color
 
 makeRect :: Int -> Int -> Int -> Int -> SDL.Rectangle CInt
 makeRect x y w h = SDL.Rectangle o z

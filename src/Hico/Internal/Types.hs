@@ -7,11 +7,14 @@ module Hico.Internal.Types where
 import           Control.Monad.State
 import           Prelude             hiding (log)
 import           SDL                 as SDL
+import           SDL.Font            as SDL
 
 data GameConfig = GameConfig {
   width  :: Int,
   height :: Int
 }
+
+type Key = Keycode
 
 data Color
   = Black | DarkBlue | DarkPurple | DarkGreen
@@ -21,10 +24,12 @@ data Color
   deriving (Show, Eq, Enum)
 
 data SDLGameState state = SDLGameState {
-  _config     :: GameConfig,
-  _renderer   :: Renderer,
-  _frameCount :: Int,
-  _state      :: state
+  _config      :: GameConfig,
+  _renderer    :: Renderer,
+  _font        :: SDL.Font,
+  _frameCount  :: Int,
+  _keysPressed :: [Key],
+  _state       :: state
 }
 
 type HicoProgram state = StateT (SDLGameState state) IO
