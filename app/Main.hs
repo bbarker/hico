@@ -4,7 +4,10 @@
 
 module Main where
 
+import           Data.Semigroup ((<>))
 import           Hico
+import           Options.Applicative
+import           SDL            (RendererConfig, RendererType(SoftwareRenderer), defaultRenderer)
 
 data SomeEnv = SomeEnv {
   x :: Int
@@ -35,5 +38,43 @@ exampleGame = Game {
   draw = draw'
 }
 
+data RunConfig = RunConfig {
+  renderer :: RendererType
+}
+
+defaultRendererType :: RendererType
+defaultRendererType = case defaultRenderer of
+  RendererConfig rt  _ -> rt
+
+
+sdlDefaultRenderer :: Parser RendererType
+sdlDefaultRenderer = flag' defaultRendererType (
+  long "renderer=default"
+  <> help "Use SDL's default renderer")
+
+sdlsoftwareRenderer :: Parser RendererType
+sdlsoftwareRenderer = flag' SoftwareRenderer (
+  long "renderer=default"
+  <> help "Use SDL's default renderer")
+
+parseCliConfig :: Parser RunConfig
+parseCliConfig = RunConfig
+  <$> option auto (
+    long "renderer"
+    <> metavar "RENDERER"
+    <> help "Which SDL RenderType to use"
+  )
+
 main :: IO ()
-main = runHicoGame exampleGame
+main = doConfig =<< execParser opts
+  where
+    opts = info (parseCliConfig <**> helper) (
+      fullDesc
+      <> progDesc "Welcome to Hico!"
+      <> header "hico - a minimal example for the hico library"
+      )
+
+
+doConfig :: RunConfig -> IO()
+doConfig (RunConfig renderer) = runHicoGame exampleGame
+doConfig _ = return ()
