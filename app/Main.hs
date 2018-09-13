@@ -7,7 +7,7 @@ module Main where
 import           Data.Semigroup ((<>))
 import           Hico
 import           Options.Applicative
-import           SDL            (RendererConfig, RendererType(SoftwareRenderer), defaultRenderer)
+import           SDL            (RendererConfig, RendererType(SoftwareRenderer), defaultRenderer, rendererType)
 
 data SomeEnv = SomeEnv {
   x :: Int
@@ -42,13 +42,8 @@ data RunConfig = RunConfig {
   renderer :: RendererType
 }
 
-defaultRendererType :: RendererType
-defaultRendererType = case defaultRenderer of
-  RendererConfig rt  _ -> rt
-
-
 sdlDefaultRenderer :: Parser RendererType
-sdlDefaultRenderer = flag' defaultRendererType (
+sdlDefaultRenderer = flag' (rendererType(defaultRenderer)) (
   long "renderer=default"
   <> help "Use SDL's default renderer")
 
