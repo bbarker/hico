@@ -42,23 +42,21 @@ data RunConfig = RunConfig {
   renderer :: RendererType
 }
 
-sdlDefaultRenderer :: Parser RendererType
-sdlDefaultRenderer = flag' (rendererType(defaultRenderer)) (
-  long "renderer=default"
+sdlDefaultRendererP :: Parser RendererType
+sdlDefaultRendererP = flag' (rendererType(defaultRenderer)) (
+  long "default_rndr"
   <> help "Use SDL's default renderer")
 
-sdlsoftwareRenderer :: Parser RendererType
-sdlsoftwareRenderer = flag' SoftwareRenderer (
-  long "renderer=default"
+sdlsoftwareRendererP :: Parser RendererType
+sdlsoftwareRendererP = flag' SoftwareRenderer (
+  long "software_rndr"
   <> help "Use SDL's default renderer")
+
+rendererP :: Parser RendererType
+rendererP = sdlDefaultRendererP <|> sdlsoftwareRendererP
 
 parseCliConfig :: Parser RunConfig
-parseCliConfig = RunConfig
-  <$> option auto (
-    long "renderer"
-    <> metavar "RENDERER"
-    <> help "Which SDL RenderType to use"
-  )
+parseCliConfig = RunConfig <$> rendererP
 
 main :: IO ()
 main = doConfig =<< execParser opts
@@ -71,5 +69,4 @@ main = doConfig =<< execParser opts
 
 
 doConfig :: RunConfig -> IO()
-doConfig (RunConfig renderer) = runHicoGame exampleGame
-doConfig _ = return ()
+doConfig (RunConfig runConf) = runHicoGame exampleGame
