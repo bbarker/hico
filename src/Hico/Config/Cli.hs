@@ -6,9 +6,10 @@
 module Hico.Config.Cli where
 
 import           Data.Semigroup ((<>))
+import           Data.Maybe
 import           Hico.Types
 import           Options.Applicative
-import           SDL            (RendererConfig, RendererType(SoftwareRenderer), defaultRenderer, rendererType)
+import           SDL (RendererType(SoftwareRenderer), defaultRenderer, rendererType)
 
 data CliConfig = CliConfig {
   widthIn  :: Int,
@@ -18,13 +19,12 @@ data CliConfig = CliConfig {
 
 processRunConfig :: CliConfig -> GameConfig
 processRunConfig raw = GameConfig{
-   width    = widthIn(raw)
-   ,height  = heightIn(raw)
-  ,renderer = maybe defaultRendererType id (rendererRaw(raw))
+   width    = widthIn raw
+   ,height  = heightIn raw
+  ,renderer = fromMaybe defaultRendererType (rendererRaw raw)
   }
   where
-    rendererRaw(raw) = renderer(raw:: CliConfig)
-
+    rendererRaw raw = renderer(raw:: CliConfig)
 
 xresP :: Parser Int
 xresP = option auto(
@@ -46,7 +46,7 @@ yresP = option auto
          <> metavar "INT")
 
 defaultRendererType :: RendererType
-defaultRendererType = rendererType(defaultRenderer)
+defaultRendererType = rendererType defaultRenderer
 
 sdlDefaultRendererP :: Parser RendererType
 sdlDefaultRendererP = flag' defaultRendererType (

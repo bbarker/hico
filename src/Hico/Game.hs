@@ -5,7 +5,7 @@ module Hico.Game (
     runHicoGame
 ) where
 
-import           Control.Monad        (forever, void, unless)
+import           Control.Monad        (forever, void)
 import           Hico.SDL.Interpreter (runHicoSDL)
 import           Hico.Types
 import           SDL                  as SDL

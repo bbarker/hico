@@ -15,7 +15,7 @@ data SomeEnv = SomeEnv {
 update' :: SomeEnv -> HaxelProgramF SomeEnv ()
 update' state = do
   config <- getConfig
-  setState $ state { x = ((x state + 1) `mod` (width config)) }
+  setState $ state { x = (x state + 1) `mod` (width config) }
 
 
 draw' :: SomeEnv ->  HaxelProgramF SomeEnv ()
@@ -31,7 +31,6 @@ exampleGame cfg = Game {
   draw = draw'
 }
 
-
 main :: IO ()
 main = doConfig =<< execParser opts
   where
@@ -41,7 +40,6 @@ main = doConfig =<< execParser opts
       <> header "hico - a minimal example for the hico library"
       )
 
-
 doConfig :: CliConfig -> IO()
 doConfig runConf =
-  runHicoGame (exampleGame(processRunConfig(runConf)))
+  runHicoGame (exampleGame(processRunConfig runConf))
