@@ -10,10 +10,13 @@ import           Control.Monad.Free.TH
 import           Control.Monad.IO.Class
 import           Control.Monad.State
 import           Prelude                hiding (log)
+import           SDL            (RendererType)
+
 
 data GameConfig = GameConfig {
   width  :: Int,
-  height :: Int
+  height :: Int,
+  renderer :: RendererType
 }
 
 data Color
