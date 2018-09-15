@@ -58,18 +58,18 @@ processRunConfig raw = RunConfig(
 defaultRendererType :: RendererType
 defaultRendererType = rendererType(defaultRenderer)
 
-sdlDefaultRendererP :: Parser (Maybe RendererType)
-sdlDefaultRendererP = flag' (Just defaultRendererType) (
+sdlDefaultRendererP :: Parser RendererType
+sdlDefaultRendererP = flag' defaultRendererType (
   long "default_rndr"
   <> help "Use SDL's default renderer")
 
-sdlsoftwareRendererP :: Parser (Maybe RendererType)
-sdlsoftwareRendererP = flag' (Just SoftwareRenderer) (
+sdlsoftwareRendererP :: Parser RendererType
+sdlsoftwareRendererP = flag' SoftwareRenderer (
   long "software_rndr"
   <> help "Use SDL's default renderer")
 
 rendererP :: Parser (Maybe RendererType)
-rendererP = sdlDefaultRendererP <|> sdlsoftwareRendererP
+rendererP = optional (sdlDefaultRendererP <|> sdlsoftwareRendererP)
 
 parseCliConfig :: Parser RawRunConfig
 parseCliConfig = RawRunConfig <$> rendererP
