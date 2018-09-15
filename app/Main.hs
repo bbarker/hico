@@ -15,11 +15,6 @@ data SomeEnv = SomeEnv {
   x :: Int
 } deriving (Eq, Show)
 
-config' :: GameConfig
-config' = GameConfig {
-  width = 640,
-  height = 480
-}
 
 update' :: SomeEnv -> HaxelProgramF SomeEnv ()
 update' state = do
@@ -32,28 +27,48 @@ draw' state = do
   clear Red
   rect 10 10 20 20 Green
 
-exampleGame :: Game SomeEnv
-exampleGame = Game {
+exampleGame :: GameConfig -> Game SomeEnv
+exampleGame cfg = Game {
   initial = SomeEnv 1,
-  config = config',
+  config = cfg,
   update = update',
   draw = draw'
 }
 
 data RawRunConfig = RawRunConfig {
+  widthIn  :: Int,
+  heightIn :: Int,
   renderer :: Maybe RendererType
 }
 
-data RunConfig = RunConfig {
-  renderer :: RendererType
-}
+processRunConfig :: RawRunConfig -> GameConfig
+processRunConfig raw = GameConfig{
+   width    = widthIn(raw)
+   ,height  = heightIn(raw)
+  ,renderer = maybe defaultRendererType id (rendererRaw(raw))
+  }
+  where
+    rendererRaw(raw) = renderer(raw:: RawRunConfig)
 
-renderer2(raw) = renderer(raw:: RawRunConfig)
 
-processRunConfig :: RawRunConfig -> RunConfig
-processRunConfig raw = RunConfig(
-  maybe defaultRendererType id (renderer2(raw))
+xresP :: Parser Int
+xresP = option auto(
+  long "horizontal-res"
+  <> short 'x'
+  <> help "Width; Horizontal (x) axis resolution for game"
+  <> showDefault
+  <> value 640
+  <> metavar "INT"
   )
+
+yresP :: Parser Int
+yresP = option auto
+          ( long "vertical-res"
+         <> short 'y'
+         <> help "Height; Vertical (y) axis resolution for game"
+         <> showDefault
+         <> value 480
+         <> metavar "INT")
 
 defaultRendererType :: RendererType
 defaultRendererType = rendererType(defaultRenderer)
@@ -72,7 +87,7 @@ rendererP :: Parser (Maybe RendererType)
 rendererP = optional (sdlDefaultRendererP <|> sdlsoftwareRendererP)
 
 parseCliConfig :: Parser RawRunConfig
-parseCliConfig = RawRunConfig <$> rendererP
+parseCliConfig = RawRunConfig <$> xresP <*> yresP <*> rendererP
 
 main :: IO ()
 main = doConfig =<< execParser opts
@@ -85,4 +100,5 @@ main = doConfig =<< execParser opts
 
 
 doConfig :: RawRunConfig -> IO()
-doConfig (RawRunConfig runConf) = runHicoGame exampleGame
+doConfig runConf =
+  runHicoGame (exampleGame(processRunConfig(runConf)))
