@@ -5,7 +5,7 @@ module Hico.Game (
     runHicoGame
 ) where
 
-import           Control.Monad        (forever, void, unless)
+import           Control.Monad        (forever, void)
 import           Hico.SDL.Interpreter (runHicoSDL)
 import           Hico.Types
 import           SDL                  as SDL
@@ -14,11 +14,8 @@ runHicoGame :: Game e -> IO ()
 runHicoGame game = do
   SDL.initializeAll
   window <- SDL.createWindow "My SDL Application" (windowConfig $ config game)
-  renderer <- SDL.createRenderer window (-1) softwareRendererConfig
+  renderer <- SDL.createRenderer window (-1) (rendererConfig $ config game)
   gameLoop renderer game
-
-screenHeight = 480
-screenWidth = 640
 
 gameLoop :: Renderer -> Game e -> IO ()
 gameLoop renderer game @ (Game initial config update draw) = do
@@ -32,7 +29,7 @@ gameLoop renderer game @ (Game initial config update draw) = do
       draw state
 
 windowConfig :: GameConfig -> WindowConfig
-windowConfig (GameConfig width height) = WindowConfig
+windowConfig (GameConfig _ _ width height _) = WindowConfig
   { windowBorder       = True
   , windowHighDPI      = False
   , windowInputGrabbed = False
@@ -44,9 +41,9 @@ windowConfig (GameConfig width height) = WindowConfig
   , windowVisible      = True
   }
 
-softwareRendererConfig :: RendererConfig
-softwareRendererConfig = RendererConfig 
+rendererConfig :: GameConfig -> RendererConfig
+rendererConfig (GameConfig _ _ _ _ rtype) = RendererConfig
   {
-    rendererType  = SoftwareRenderer
+    rendererType  = rtype
   , rendererTargetTexture = False
   }
