@@ -24,11 +24,11 @@ heightBaseCfg = 480
 processRunConfig :: CliConfig -> GameConfig
 processRunConfig (CliConfig wS _) | wS < 1  = error "Window Scale must be >= 1"
 processRunConfig raw = GameConfig {
-   widthBase  = widthBaseCfg
-  ,heightBase = heightBaseCfg
-  ,width      = floor (fromIntegral widthBaseCfg  * windowScale raw)
-  ,height     = floor (fromIntegral heightBaseCfg * windowScale raw)
-  ,renderer = fromMaybe defaultRendererType (rendererRaw raw)
+  widthBase    = widthBaseCfg
+  , heightBase = heightBaseCfg
+  , width      = floor (fromIntegral widthBaseCfg  * windowScale raw)
+  , height     = floor (fromIntegral heightBaseCfg * windowScale raw)
+  , renderer   = fromMaybe defaultRendererType (rendererRaw raw)
 } where rendererRaw raw = renderer (raw:: CliConfig)
 
 windowScaleP :: Parser Float
