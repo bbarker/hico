@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE OverloadedStrings #-}
-
 {-# LANGUAGE DuplicateRecordFields #-}
 
 module Hico.Config.Cli where
@@ -9,41 +8,35 @@ import           Data.Semigroup ((<>))
 import           Data.Maybe
 import           Hico.Types
 import           Options.Applicative
-import           SDL (RendererType(SoftwareRenderer), defaultRenderer, rendererType)
+import           SDL (RendererType (SoftwareRenderer), defaultRenderer, rendererType)
 
 data CliConfig = CliConfig {
-  widthIn  :: Int,
-  heightIn :: Int,
-  renderer :: Maybe RendererType
+  windowScale :: Float,
+  renderer    :: Maybe RendererType
 }
 
+widthBaseCfg  = 640
+heightBaseCfg = 480
+
 processRunConfig :: CliConfig -> GameConfig
-processRunConfig raw = GameConfig{
-   width    = widthIn raw
-   ,height  = heightIn raw
+processRunConfig (CliConfig wS _) | wS < 1  = error "Window Scale must be >= 1"
+processRunConfig raw = GameConfig {
+   widthBase  = widthBaseCfg
+  ,heightBase = heightBaseCfg
+  ,width      = floor (fromIntegral widthBaseCfg  * windowScale raw)
+  ,height     = floor (fromIntegral heightBaseCfg * windowScale raw)
   ,renderer = fromMaybe defaultRendererType (rendererRaw raw)
-  }
-  where
-    rendererRaw raw = renderer(raw:: CliConfig)
+} where rendererRaw raw = renderer (raw:: CliConfig)
 
-xresP :: Parser Int
-xresP = option auto(
-  long "horizontal-res"
-  <> short 'x'
-  <> help "Width; Horizontal (x) axis resolution for game"
+windowScaleP :: Parser Float
+windowScaleP = option auto (
+  long "scale"
+  <> short 's'
+  <> help "multiplier for game resolution; must be >= 1"
   <> showDefault
-  <> value 640
-  <> metavar "INT"
+  <> value 1
+  <> metavar "DECIMAL"
   )
-
-yresP :: Parser Int
-yresP = option auto
-          ( long "vertical-res"
-         <> short 'y'
-         <> help "Height; Vertical (y) axis resolution for game"
-         <> showDefault
-         <> value 480
-         <> metavar "INT")
 
 defaultRendererType :: RendererType
 defaultRendererType = rendererType defaultRenderer
@@ -62,4 +55,4 @@ rendererP :: Parser (Maybe RendererType)
 rendererP = optional (sdlDefaultRendererP <|> sdlsoftwareRendererP)
 
 parseCliConfig :: Parser CliConfig
-parseCliConfig = CliConfig <$> xresP <*> yresP <*> rendererP
+parseCliConfig = CliConfig <$> windowScaleP <*> rendererP

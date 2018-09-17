@@ -42,4 +42,4 @@ main = doConfig =<< execParser opts
 
 doConfig :: CliConfig -> IO()
 doConfig runConf =
-  runHicoGame (exampleGame(processRunConfig runConf))
+  runHicoGame (exampleGame (processRunConfig runConf))

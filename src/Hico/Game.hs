@@ -29,7 +29,7 @@ gameLoop renderer game @ (Game initial config update draw) = do
       draw state
 
 windowConfig :: GameConfig -> WindowConfig
-windowConfig (GameConfig width height _) = WindowConfig
+windowConfig (GameConfig _ _ width height _) = WindowConfig
   { windowBorder       = True
   , windowHighDPI      = False
   , windowInputGrabbed = False
@@ -42,7 +42,7 @@ windowConfig (GameConfig width height _) = WindowConfig
   }
 
 rendererConfig :: GameConfig -> RendererConfig
-rendererConfig (GameConfig _ _ rtype) = RendererConfig
+rendererConfig (GameConfig _ _ _ _ rtype) = RendererConfig
   {
     rendererType  = rtype
   , rendererTargetTexture = False

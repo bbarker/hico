@@ -14,9 +14,11 @@ import           SDL            (RendererType)
 
 
 data GameConfig = GameConfig {
-  width  :: Int,
-  height :: Int,
-  renderer :: RendererType
+  widthBase  :: Int,
+  heightBase :: Int,
+  width      :: Int,
+  height     :: Int,
+  renderer   :: RendererType
 }
 
 data Color
