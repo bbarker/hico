@@ -8,7 +8,10 @@ import           Data.Semigroup ((<>))
 import           Data.Maybe
 import           Hico.Types
 import           Options.Applicative
-import           SDL (RendererType (SoftwareRenderer), defaultRenderer, rendererType)
+import           SDL (RendererType (
+                   AcceleratedRenderer, AcceleratedVSyncRenderer,
+                   SoftwareRenderer, UnacceleratedRenderer
+                 ), defaultRenderer, rendererType)
 
 data CliConfig = CliConfig {
   windowScale :: Float,
@@ -41,18 +44,39 @@ windowScaleP = option auto (
 defaultRendererType :: RendererType
 defaultRendererType = rendererType defaultRenderer
 
-sdlDefaultRendererP :: Parser RendererType
-sdlDefaultRendererP = flag' defaultRendererType (
+defaultRendererP :: Parser RendererType
+defaultRendererP = flag' defaultRendererType (
   long "default_rndr"
   <> help "Use SDL's default renderer")
 
-sdlsoftwareRendererP :: Parser RendererType
-sdlsoftwareRendererP = flag' SoftwareRenderer (
+acceleratedRendererP :: Parser RendererType
+acceleratedRendererP = flag' AcceleratedRenderer (
+  long "accelerated_rndr"
+  <> help "Use SDL's accelerated renderer")
+
+acceleratedVSyncRendererP :: Parser RendererType
+acceleratedVSyncRendererP = flag' AcceleratedVSyncRenderer (
+  long "accelerated_vsync_rndr"
+  <> help "Use SDL's accelerated renderer with vsync")
+
+softwareRendererP :: Parser RendererType
+softwareRendererP = flag' SoftwareRenderer (
   long "software_rndr"
   <> help "Use SDL's default renderer")
 
+unacceleratedRendererP :: Parser RendererType
+unacceleratedRendererP = flag' UnacceleratedRenderer (
+  long "unaccelerated_rndr"
+  <> help "Use SDL's unaccelerated renderer")
+
 rendererP :: Parser (Maybe RendererType)
-rendererP = optional (sdlDefaultRendererP <|> sdlsoftwareRendererP)
+rendererP = optional (
+  acceleratedRendererP <|>
+  acceleratedVSyncRendererP <|>
+  defaultRendererP  <|>
+  softwareRendererP <|>
+  unacceleratedRendererP
+  )
 
 parseCliConfig :: Parser CliConfig
 parseCliConfig = CliConfig <$> windowScaleP <*> rendererP
