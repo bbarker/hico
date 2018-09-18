@@ -10,8 +10,11 @@ import           SDL                 as SDL
 import           SDL.Font            as SDL
 
 data GameConfig = GameConfig {
-  width  :: Int,
-  height :: Int
+  widthBase  :: Int,
+  heightBase :: Int,
+  width      :: Int,
+  height     :: Int,
+  renderer   :: RendererType
 }
 
 data Action = KeyInput KeyMotion | Idle | Quit

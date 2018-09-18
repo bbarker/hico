@@ -30,7 +30,7 @@ runHicoGame game = do
   SDL.initializeAll
   SDL.Font.initialize
   window <- SDL.createWindow "My SDL Application" (windowConfig $ config game)
-  renderer <- SDL.createRenderer window (-1) softwareRendererConfig
+  renderer <- SDL.createRenderer window (-1) (rendererConfig $ config game)
   font <- SDL.Font.load defaultFontPath 16
   gameLoop renderer font game
 
@@ -99,7 +99,9 @@ text x y s c = do
   surface <- SDL.Font.solid font c' t'
   texture   <- SDL.createTextureFromSurface renderer surface
   (w, h) <- SDL.Font.size font t'
-  let rt = makeRect x y w h in SDL.copy renderer texture Nothing (Just rt)
+  let rt = makeRect x y w h 
+  msg $ show rt
+  SDL.copy renderer texture Nothing (Just rt)
   SDL.freeSurface surface
   SDL.destroyTexture texture
   where
@@ -151,7 +153,7 @@ colorToRGB color = case color of
     
 
 windowConfig :: GameConfig -> SDL.WindowConfig
-windowConfig (GameConfig width height) = SDL.WindowConfig
+windowConfig (GameConfig _ _ width height _) = SDL.WindowConfig
   { SDL.windowBorder       = True
   , SDL.windowHighDPI      = True
   , SDL.windowInputGrabbed = False
@@ -163,8 +165,9 @@ windowConfig (GameConfig width height) = SDL.WindowConfig
   , SDL.windowVisible      = True
   }
 
-softwareRendererConfig :: SDL.RendererConfig
-softwareRendererConfig = SDL.RendererConfig
-  { SDL.rendererType  = SDL.SoftwareRenderer
+rendererConfig :: GameConfig -> SDL.RendererConfig
+rendererConfig (GameConfig _ _ _ _ rtype) = SDL.RendererConfig
+  {
+    SDL.rendererType  = rtype
   , SDL.rendererTargetTexture = False
   }

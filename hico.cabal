@@ -20,6 +20,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     Hico
   other-modules:       Hico.Game
+                     , Hico.Config.Cli
                      , Hico.Internal.Types
                      , Hico.Internal.InputHandling
                      , Hico.Types
@@ -33,6 +34,7 @@ library
                      , text
                      , free
                      , mtl
+                     , optparse-applicative
                      , sdl2
                      , sdl2-ttf
   default-language:    Haskell2010
@@ -43,4 +45,5 @@ executable hico
   default-language:    Haskell2010
   build-depends:       base >= 4.7 && < 5
                      , hico
+                     , optparse-applicative
                      , sdl2
