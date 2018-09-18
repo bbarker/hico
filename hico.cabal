@@ -21,6 +21,7 @@ library
   exposed-modules:     Hico
   other-modules:       Hico.Game
                      , Hico.Internal.Types
+                     , Hico.Internal.InputHandling
                      , Hico.Types
   default-extensions: Strict
   ghc-options:       -O2
@@ -43,7 +44,3 @@ executable hico
   build-depends:       base >= 4.7 && < 5
                      , hico
                      , sdl2
-
-
--- Data-Files:            fonts/JF-Dot-K12.ttf
---                      , fonts/JF-Dot-K12B.ttf

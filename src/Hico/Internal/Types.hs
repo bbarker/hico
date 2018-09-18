@@ -14,7 +14,22 @@ data GameConfig = GameConfig {
   height :: Int
 }
 
-type Key = Keycode
+data Action = KeyInput KeyMotion | Idle | Quit
+  deriving Show
+
+data KeyMotion
+  = Pressed Button
+  | Released Button
+  deriving Show
+
+data Button
+  = BtnUp
+  | BtnDown
+  | BtnLeft
+  | BtnRight
+  | BtnA
+  | BtnB
+  deriving (Show, Eq)
 
 data Color
   = Black | DarkBlue | DarkPurple | DarkGreen
@@ -24,12 +39,12 @@ data Color
   deriving (Show, Eq, Enum)
 
 data SDLGameState state = SDLGameState {
-  _config      :: GameConfig,
-  _renderer    :: Renderer,
-  _font        :: SDL.Font,
-  _frameCount  :: Int,
-  _keysPressed :: [Key],
-  _state       :: state
+  _config     :: GameConfig,
+  _renderer   :: Renderer,
+  _font       :: SDL.Font,
+  _frameCount :: Int,
+  _buttons    :: [Button],
+  _state      :: state
 }
 
 type HicoProgram state = StateT (SDLGameState state) IO
@@ -37,6 +52,6 @@ type HicoProgram state = StateT (SDLGameState state) IO
 data Game e = Game {
   initial :: e,
   config  :: GameConfig,
-  update  :: e -> HicoProgram e (),
+  update  :: e -> [Button] -> HicoProgram e (),
   draw    :: e -> HicoProgram e ()
 }

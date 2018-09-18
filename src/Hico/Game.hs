@@ -9,7 +9,6 @@ module Hico.Game (
   , msg
   , clear
   , text
-  , btnp
   , exit
 ) where
 
@@ -20,10 +19,10 @@ import           Data.Text              (pack)
 import           Data.Word
 import           Foreign.C.Types        (CInt)
 import           Hico.Types
+import           Hico.Internal.InputHandling
 import           Prelude                hiding (log)
 import qualified SDL                    as SDL 
 import qualified SDL.Font 
-import Data.Maybe (catMaybes)
 import           System.Exit            (exitSuccess)
 
 runHicoGame :: Game e -> IO ()
@@ -44,29 +43,32 @@ gameLoop renderer font game @ (Game initial config update draw) =
   where
     initialGameState = (SDLGameState config renderer font 0 [] initial)
     op = forever $ do
-      events <- SDL.pollEvents
-      state <- get
-      update state
-      updatedState <- get
-      draw updatedState
+      event <- SDL.pollEvent
+      let action = actionFromEvent event
+      
+      handleAction action
       
       gameState <- getSDLGameState
-      setSDLGameState $ gameState { 
-        _frameCount = (_frameCount gameState) + 1,
-        _keysPressed = mapKeysPressed events
-      }
+      setSDLGameState $ gameState { _frameCount = (_frameCount gameState + 1) }
+      
+      -- User stuff
+      gameState <- getSDLGameState
+      update (_state gameState) (_buttons gameState)
+      updatedState <- get
+      draw updatedState
 
       SDL.present renderer
 
-mapKeysPressed :: [SDL.Event] -> [Key]
-mapKeysPressed events = catMaybes $ fmap (payloadToKeycode . SDL.eventPayload) events
-  where 
-    payloadToKeycode payload = 
-      case payload of
-        (SDL.KeyboardEvent (SDL.KeyboardEventData _ SDL.Pressed False keysym)) -> 
-          Just $ SDL.keysymKeycode keysym 
-        _ -> Nothing
-
+handleAction :: Action -> HicoProgram state ()
+handleAction action = do
+  gameState <- getSDLGameState
+  case action of
+    KeyInput km -> do
+      msg $ show km
+      setSDLGameState $ gameState { _buttons = (updateButtons km (_buttons gameState)) }
+    Idle        -> pure ()
+    Quit        -> exit
+  
 getSDLGameState :: HicoProgram state (SDLGameState state)
 getSDLGameState = State.get
 
@@ -80,11 +82,6 @@ set :: state -> HicoProgram state ()
 set s = do
   gameState <- getSDLGameState
   setSDLGameState $ gameState { _state = s }
-
-btnp :: Key -> HicoProgram state Bool
-btnp key = do
-  keys <- _keysPressed <$> getSDLGameState
-  pure $ elem key keys 
 
 msg :: String -> HicoProgram state ()
 msg = liftIO . putStrLn
@@ -110,7 +107,7 @@ text x y s c = do
     c'   = colorToRGB c
 
 exit :: HicoProgram state ()
-exit = liftIO exitSuccess
+exit = msg "Exiting Hico" >> liftIO exitSuccess
 
 sdlRect :: MonadIO m => SDL.Renderer -> Int -> Int -> Int -> Int -> Color-> m ()
 sdlRect renderer x1 y1 x2 y2 color = SDL.drawRect renderer (Just rect) where
