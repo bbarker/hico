@@ -1,25 +1,23 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE OverloadedStrings     #-}
 
 module Hico.Config.Cli where
 
-import           Data.Semigroup ((<>))
 import           Data.Maybe
+import           Data.Semigroup      ((<>))
 import           Hico.Types
 import           Options.Applicative
-import           SDL (RendererType (
-                   AcceleratedRenderer, AcceleratedVSyncRenderer,
-                   SoftwareRenderer, UnacceleratedRenderer
-                 ), defaultRenderer, rendererType)
+import           SDL                 (RendererType (AcceleratedRenderer, AcceleratedVSyncRenderer, SoftwareRenderer, UnacceleratedRenderer),
+                                      defaultRenderer, rendererType)
 
 data CliConfig = CliConfig {
   windowScale :: Float,
   renderer    :: Maybe RendererType
 }
 
-widthBaseCfg  = 640
-heightBaseCfg = 480
+widthBaseCfg  = 320
+heightBaseCfg = 240
 
 processRunConfig :: CliConfig -> GameConfig
 processRunConfig (CliConfig wS _) | wS < 1  = error "Window Scale must be >= 1"

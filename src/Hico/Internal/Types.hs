@@ -1,17 +1,13 @@
-{-# LANGUAGE DeriveFunctor     #-}
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE OverloadedStrings     #-}
 
 module Hico.Internal.Types where
 
-import           Control.Monad.Free
-import           Control.Monad.Free.TH
-import           Control.Monad.IO.Class
 import           Control.Monad.State
-import           Prelude                hiding (log)
-import           SDL            (RendererType)
-
+import           Prelude             hiding (log)
+import           SDL                 as SDL
+import           SDL.Font            as SDL
 
 data GameConfig = GameConfig {
   widthBase  :: Int,
@@ -21,32 +17,44 @@ data GameConfig = GameConfig {
   renderer   :: RendererType
 }
 
+data Action = KeyInput KeyMotion | Idle | Quit
+  deriving Show
+
+data KeyMotion
+  = Pressed Button
+  | Released Button
+  deriving Show
+
+data Button
+  = BtnUp
+  | BtnDown
+  | BtnLeft
+  | BtnRight
+  | BtnA
+  | BtnB
+  deriving (Show, Eq)
+
 data Color
   = Black | DarkBlue | DarkPurple | DarkGreen
   | Brown | DarkGray | LightGray | White
   | Red | Orange | Yellow | Green
   | Blue | Indigo | Pink | Peach
-  deriving (Show, Eq)
+  deriving (Show, Eq, Enum)
 
-data HicoOp state next
-  = GetState (state -> next)
-  | SetState state next
-  | GetConfig (GameConfig -> next)
-  | Clear Color next
-  | Rect Int Int Int Int Color next
-  | DisplayMessage String next
-  | Exit next
-  deriving (Functor)
+data SDLGameState state = SDLGameState {
+  _config     :: GameConfig,
+  _renderer   :: Renderer,
+  _font       :: SDL.Font,
+  _frameCount :: Int,
+  _buttons    :: [Button],
+  _state      :: state
+}
 
-makeFree ''HicoOp
-
-type HaxelProgram state = HicoOp state
-type HaxelProgramF state = Free (HaxelProgram state)
-type HaxelProgramFIO state = StateT state IO
+type HicoProgram state = StateT (SDLGameState state) IO
 
 data Game e = Game {
   initial :: e,
   config  :: GameConfig,
-  update  :: e -> HaxelProgramF e (),
-  draw    :: e -> HaxelProgramF e ()
+  update  :: e -> [Button] -> HicoProgram e (),
+  draw    :: e -> HicoProgram e ()
 }
