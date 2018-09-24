@@ -11,6 +11,7 @@ stdenv.mkDerivation {
     gmp
     pkgconfig
     SDL2
+    SDL2_ttf
   ];
   shellHook = ''
     export LD_LIBRARY_PATH=${gmp}/lib::$LD_LIBRARY_PATH
