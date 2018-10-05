@@ -22,7 +22,8 @@ import           Hico.Types
 import           Hico.Internal.InputHandling
 import           Prelude                hiding (log)
 import qualified SDL                    as SDL 
-import qualified SDL.Font 
+import qualified SDL.Font
+import qualified SDL.Image
 import           System.Exit            (exitSuccess)
 
 runHicoGame :: Game e -> IO ()
