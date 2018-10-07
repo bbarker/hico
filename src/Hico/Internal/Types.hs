@@ -43,6 +43,7 @@ data Color
 
 data SDLGameState state = SDLGameState {
   _config     :: GameConfig,
+  _window     :: Window,
   _renderer   :: Renderer,
   _font       :: SDL.Font,
   _frameCount :: Int,
