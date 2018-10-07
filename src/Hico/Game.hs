@@ -26,23 +26,26 @@ import qualified SDL.Font
 import qualified SDL.Image
 import           System.Exit            (exitSuccess)
 
+
 runHicoGame :: Game e -> IO ()
 runHicoGame game = do
   SDL.initializeAll
   SDL.Font.initialize
+  SDL.Image.initialize [SDL.Image.InitPNG]
   window <- SDL.createWindow "My SDL Application" (windowConfig $ config game)
   renderer <- SDL.createRenderer window (-1) (rendererConfig $ config game)
   font <- SDL.Font.load defaultFontPath 16
-  gameLoop renderer font game
+  gameLoop (window, renderer, font) game
 
 screenHeight = 480
 screenWidth = 640
 
-gameLoop :: SDL.Renderer -> SDL.Font.Font -> Game e -> IO ()
-gameLoop renderer font game @ (Game initial config update draw) = 
+gameLoop :: SDLBaseState -> Game e -> IO ()
+gameLoop baseState game @ (Game initial config update draw) =
   void $ State.runStateT op initialGameState 
   where
-    initialGameState = (SDLGameState config renderer font 0 [] initial)
+    (window, renderer, font) = baseState
+    initialGameState = (SDLGameState config window renderer font 0 [] initial)
     op = forever $ do
       event <- SDL.pollEvent
       let action = actionFromEvent event
@@ -57,7 +60,9 @@ gameLoop renderer font game @ (Game initial config update draw) =
       update (_state gameState) (_buttons gameState)
       updatedState <- get
       draw updatedState
-
+      image  <- SDL.Image.load imagePath
+      screen <- SDL.getWindowSurface window
+      SDL.surfaceBlit image Nothing screen Nothing
       SDL.present renderer
 
 handleAction :: Action -> HicoProgram state ()
@@ -69,7 +74,10 @@ handleAction action = do
       setSDLGameState $ gameState { _buttons = (updateButtons km (_buttons gameState)) }
     Idle        -> pure ()
     Quit        -> exit
-  
+
+
+type SDLBaseState = (SDL.Window, SDL.Renderer, SDL.Font.Font)
+
 getSDLGameState :: HicoProgram state (SDLGameState state)
 getSDLGameState = State.get
 
@@ -132,6 +140,8 @@ makeRect x y w h = SDL.Rectangle o z
 
 defaultFontPath :: FilePath
 defaultFontPath = "assets/fonts/PICO-8.ttf"
+imagePath :: FilePath
+imagePath = "assets/images/jump_game_160x120.png"
 
 colorToRGB :: Color -> SDL.V4 Word8
 colorToRGB color = case color of
