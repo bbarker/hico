@@ -22,9 +22,9 @@ handleInput (SomeEnv x y _) button =
     BtnLeft  -> (x - 1, y)
     BtnRight -> (x + 1, y)
 
-sprites :: IO [Sprite]
-sprites = do
-  img <- loadImage imagePath Nothing
+sprites' :: IO [Sprite]
+sprites' = do
+  img <- loadImage imagePath
   return [(img, originAnchor)]
 
 update' :: SomeEnv -> [Button] -> HicoProgram SomeEnv ()
@@ -56,7 +56,8 @@ exampleGame cfg = Game {
   initial = SomeEnv 0 0 0,
   config  = cfg,
   update  = update',
-  draw    = draw'
+  draw    = draw',
+  sprites  = sprites'
 }
 
 main :: IO ()

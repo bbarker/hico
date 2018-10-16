@@ -58,7 +58,8 @@ data Game e = Game {
   initial :: e,
   config  :: GameConfig,
   update  :: e -> [Button] -> HicoProgram e (),
-  draw    :: e -> HicoProgram e ()
+  draw    :: e -> HicoProgram e (),
+  sprites :: IO [Sprite]
 }
 
 type ImageBox = Rectangle Int
