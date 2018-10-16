@@ -43,12 +43,13 @@ screenHeight = 480
 screenWidth = 640
 
 gameLoop :: SDLBaseState -> Game e -> IO ()
-gameLoop baseState game @ (Game initial config update draw) =
-  void $ State.runStateT op initialGameState 
+gameLoop baseState game @ (Game initial config update draw sprites) = do
+  spriteList <- sprites
+  void $ State.runStateT (op spriteList) initialGameState
   where
     (window, renderer, font) = baseState
     initialGameState = (SDLGameState config window renderer font 0 [] initial)
-    op = forever $ do
+    op spriteList = forever $ do
       event <- SDL.pollEvent
       let action = actionFromEvent event
       
@@ -61,6 +62,8 @@ gameLoop baseState game @ (Game initial config update draw) =
       gameState <- getSDLGameState
       update (_state gameState) (_buttons gameState)
       updatedState <- get
+      -- TODO: move the following into draw?
+      mapM image spriteList
       draw updatedState
 
 handleAction :: Action -> HicoProgram state ()
@@ -126,12 +129,8 @@ image sprite = do
   SDL.surfaceBlit surf Nothing screen Nothing
   SDL.present renderer
 
-loadImage :: FilePath -> Maybe ImageBox -> IO HicoImage
-loadImage fp _ = do
-  Image <$> surface fp
-  where
-    surface :: FilePath -> IO SDL.Surface
-    surface fp = SDL.Image.load fp -- TODO: proper check
+loadImage :: FilePath -> IO HicoImage
+loadImage fp = Image <$> SDL.Image.load fp
 
 exit :: HicoProgram state ()
 exit = msg "Exiting Hico" >> liftIO exitSuccess
