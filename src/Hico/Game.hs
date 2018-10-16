@@ -9,6 +9,8 @@ module Hico.Game (
   , msg
   , clear
   , text
+  , image
+  , loadImage
   , exit
 ) where
 
@@ -60,10 +62,6 @@ gameLoop baseState game @ (Game initial config update draw) =
       update (_state gameState) (_buttons gameState)
       updatedState <- get
       draw updatedState
-      image  <- SDL.Image.load imagePath
-      screen <- SDL.getWindowSurface window
-      SDL.surfaceBlit image Nothing screen Nothing
-      SDL.present renderer
 
 handleAction :: Action -> HicoProgram state ()
 handleAction action = do
@@ -106,9 +104,9 @@ text x y s c = do
   renderer <- _renderer <$> getSDLGameState
   font <- _font <$> getSDLGameState
   surface <- SDL.Font.solid font c' t'
-  texture   <- SDL.createTextureFromSurface renderer surface
+  texture <- SDL.createTextureFromSurface renderer surface
   (w, h) <- SDL.Font.size font t'
-  let rt = makeRect x y w h 
+  let rt = makeRect x y w h
   msg $ show rt
   SDL.copy renderer texture Nothing (Just rt)
   SDL.freeSurface surface
@@ -116,6 +114,24 @@ text x y s c = do
   where
     t'  = pack s
     c'   = colorToRGB c
+
+image :: Sprite -> HicoProgram state ()
+image sprite = do
+  let (img, anchor) = sprite
+  let Image surf = img
+  let SDL.V2 x y = sdlPointToVec anchor
+  window   <- _window <$> getSDLGameState
+  renderer <- _renderer <$> getSDLGameState
+  screen   <- SDL.getWindowSurface window
+  SDL.surfaceBlit surf Nothing screen Nothing
+  SDL.present renderer
+
+loadImage :: FilePath -> Maybe ImageBox -> IO HicoImage
+loadImage fp _ = do
+  Image <$> surface fp
+  where
+    surface :: FilePath -> IO SDL.Surface
+    surface fp = SDL.Image.load fp -- TODO: proper check
 
 exit :: HicoProgram state ()
 exit = msg "Exiting Hico" >> liftIO exitSuccess
@@ -138,10 +154,11 @@ makeRect x y w h = SDL.Rectangle o z
     o = SDL.P (SDL.V2 x' y')
     z = SDL.V2 w' h'
 
+makePoint :: Int -> Int -> SDL.Point SDL.V2 CInt
+makePoint x y = SDL.P (SDL.V2 (fromIntegral x) (fromIntegral y))
+
 defaultFontPath :: FilePath
 defaultFontPath = "assets/fonts/PICO-8.ttf"
-imagePath :: FilePath
-imagePath = "assets/images/jump_game_160x120.png"
 
 colorToRGB :: Color -> SDL.V4 Word8
 colorToRGB color = case color of

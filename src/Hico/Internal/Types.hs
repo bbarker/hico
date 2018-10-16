@@ -5,6 +5,7 @@
 module Hico.Internal.Types where
 
 import           Control.Monad.State
+import           Foreign.C.Types        (CInt)
 import           Prelude             hiding (log)
 import           SDL                 as SDL
 import           SDL.Font            as SDL
@@ -59,3 +60,19 @@ data Game e = Game {
   update  :: e -> [Button] -> HicoProgram e (),
   draw    :: e -> HicoProgram e ()
 }
+
+type ImageBox = Rectangle Int
+data HicoImage
+  = Image Surface
+  | ImageSeg Surface ImageBox
+
+type ScreenAnchor = Point V2 Int
+type Sprite = (HicoImage, ScreenAnchor)
+
+sdlPointToVec :: Point vx entries -> vx entries
+sdlPointToVec pVec = do
+  let P vec = pVec
+  vec
+
+originAnchor :: ScreenAnchor
+originAnchor = SDL.P $ V2 0 0
