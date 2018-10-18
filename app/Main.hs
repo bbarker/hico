@@ -5,8 +5,7 @@ module Main where
 
 import           Hico
 import           Options.Applicative
--- TODO: abstract SDL Image load above
-
+import qualified Data.Map        as Map
 
 data SomeEnv = SomeEnv {
   _x     :: Int,
@@ -22,10 +21,10 @@ handleInput (SomeEnv x y _) button =
     BtnLeft  -> (x - 1, y)
     BtnRight -> (x + 1, y)
 
-sprites' :: IO [Sprite]
+sprites' :: IO HMS.HashMap Symbol Sprite
 sprites' = do
   img <- loadImage imagePath
-  return [(img, originAnchor)]
+  return HMS.singleton fullImage (img, originAnchor)
 
 update' :: SomeEnv -> [Button] -> HicoProgram SomeEnv ()
 update' env buttons = do
@@ -76,3 +75,4 @@ runWithConfig runConf =
 
 imagePath :: FilePath
 imagePath = "assets/images/jump_game_160x120.png"
+fullImage = symbol("fullImage")

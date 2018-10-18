@@ -35,10 +35,20 @@ resolver: lts-12.9
 #  - wai
 packages:
 - .
+
 # Dependency packages to be pulled from upstream that are not in the resolver
 # using the same syntax as the packages field.
 # (e.g., acme-missiles-0.3)
-# extra-deps: []
+extra-deps: 
+- AC-PPM-1.1.1
+# TODO: use hackage version when backpacks are supported on hackage
+- git: git@github.com:kowainik/containers-backpack.git
+  commit: e16186733d414eb538dd7abf1557a2a026071721
+  subdirs:
+  - containers-sig-readonly
+  - containers-sig
+  - containers-contrib
+  - containers-ordered-strict
 
 # Override default flag values for local packages and extra-deps
 # flags: {}

@@ -5,7 +5,8 @@
 module Hico.Internal.Types where
 
 import           Control.Monad.State
-import           Foreign.C.Types        (CInt)
+import           Data.Symbol         as Symbol
+--import           Foreign.C.Types        (CInt)
 import           Prelude             hiding (log)
 import           SDL                 as SDL
 import           SDL.Font            as SDL
@@ -77,3 +78,11 @@ sdlPointToVec pVec = do
 
 originAnchor :: ScreenAnchor
 originAnchor = SDL.P $ V2 0 0
+
+type HicoSymbol = Symbol.Symbol
+
+symbol :: String -> HicoSymbol
+symbol name = Symbol.intern name
+
+symbol2Str :: HicoSymbol -> String
+symbol2Str sym = Symbol.unintern sym

@@ -29,8 +29,11 @@ library
                      -fno-warn-name-shadowing
                      -fwarn-unused-imports
                      -funbox-strict-fields
+                     -fexpose-all-unfoldings
+                     -fspecialise-aggressively
   build-depends:       base >= 4.7 && < 5
                      , bytestring
+                     , containers-contrib
                      , text
                      , free
                      , mtl
@@ -38,6 +41,7 @@ library
                      , sdl2
                      , sdl2-image
                      , sdl2-ttf
+                     , symbol
   default-language:    Haskell2010
 
 executable hico
@@ -46,5 +50,5 @@ executable hico
   default-language:    Haskell2010
   build-depends:       base >= 4.7 && < 5
                      , hico
+                     , containers-ordered-strict
                      , optparse-applicative
-                     , sdl2
