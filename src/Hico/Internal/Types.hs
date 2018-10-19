@@ -1,11 +1,15 @@
-{-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE OverloadedStrings     #-}
-
+{-# LANGUAGE ConstraintKinds           #-}
+{-# LANGUAGE DuplicateRecordFields     #-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE TypeFamilies               #-}
 module Hico.Internal.Types where
 
+import qualified Control.Lens        as Lens
 import           Control.Monad.State
-import           Foreign.C.Types        (CInt)
+import           Data.Symbol         as Symbol
+--import           Foreign.C.Types        (CInt)
 import           Prelude             hiding (log)
 import           SDL                 as SDL
 import           SDL.Font            as SDL
@@ -53,13 +57,14 @@ data SDLGameState state = SDLGameState {
 }
 
 type HicoProgram state = StateT (SDLGameState state) IO
+type IsSpriteMap m = (Lens.At m, Lens.Index m ~ ImageId, Lens.IxValue m ~ Sprite)
 
-data Game e = Game {
+data Game e = forall m. IsSpriteMap m => Game {
   initial :: e,
   config  :: GameConfig,
   update  :: e -> [Button] -> HicoProgram e (),
-  draw    :: e -> HicoProgram e (),
-  sprites :: IO [Sprite]
+  draw    :: e -> m -> HicoProgram e (),
+  sprites :: IO m
 }
 
 type ImageBox = Rectangle Int
@@ -77,3 +82,16 @@ sdlPointToVec pVec = do
 
 originAnchor :: ScreenAnchor
 originAnchor = SDL.P $ V2 0 0
+
+
+data ImageId = ImageId Symbol.Symbol
+  deriving (Show, Eq)
+
+instance Ord ImageId where
+    compare (ImageId s1) (ImageId s2) = compare s1 s2
+
+imageId :: String -> ImageId
+imageId name = ImageId $ Symbol.intern name
+
+imageId2Str :: ImageId -> String
+imageId2Str (ImageId sym) = Symbol.unintern sym

@@ -1,6 +1,6 @@
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE OverloadedStrings #-}
-
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE TypeFamilies          #-}
 module Hico.Game (
     runHicoGame
   , getSDLGameState
@@ -44,12 +44,12 @@ screenWidth = 640
 
 gameLoop :: SDLBaseState -> Game e -> IO ()
 gameLoop baseState game @ (Game initial config update draw sprites) = do
-  spriteList <- sprites
-  void $ State.runStateT (op spriteList) initialGameState
+  spriteMap <- sprites
+  void $ State.runStateT (op spriteMap) initialGameState
   where
     (window, renderer, font) = baseState
     initialGameState = (SDLGameState config window renderer font 0 [] initial)
-    op spriteList = forever $ do
+    op spriteMap = forever $ do
       event <- SDL.pollEvent
       let action = actionFromEvent event
       
@@ -57,14 +57,12 @@ gameLoop baseState game @ (Game initial config update draw sprites) = do
       
       gameState <- getSDLGameState
       setSDLGameState $ gameState { _frameCount = (_frameCount gameState + 1) }
-      
       -- User stuff
       gameState <- getSDLGameState
       update (_state gameState) (_buttons gameState)
       updatedState <- get
-      -- TODO: move the following into draw?
-      mapM image spriteList
-      draw updatedState
+      draw updatedState spriteMap
+
 
 handleAction :: Action -> HicoProgram state ()
 handleAction action = do
@@ -120,6 +118,7 @@ text x y s c = do
 
 image :: Sprite -> HicoProgram state ()
 image sprite = do
+  --let Just sprite = maybeSprite
   let (img, anchor) = sprite
   let Image surf = img
   let SDL.V2 x y = sdlPointToVec anchor
