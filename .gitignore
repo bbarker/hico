@@ -25,3 +25,5 @@ report.html
 *~
 *.idea
 *.iml
+\#*
+.\#*
