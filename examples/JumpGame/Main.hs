@@ -3,9 +3,11 @@
 
 module Main where
 
+import           Control.Monad      (join)
 import           Hico
 import           Options.Applicative
 import qualified Data.Map.Strict        as DMapS
+import           Data.Maybe         (maybeToList)
 -- TODO: abstract SDL Image load above
 
 data SomeEnv = SomeEnv {
@@ -24,10 +26,10 @@ handleInput (SomeEnv x y _ _) button =
     BtnRight -> (x + 1, y)
 
 type SpriteMap = DMapS.Map ImageId Sprite
-sprites' :: IO SpriteMap
-sprites' = do
+data' :: IO (Maybe SpriteMap)
+data' = do
   img <- loadImage imagePath
-  return $ DMapS.singleton fullImage (img, originAnchor)
+  return $ Just $ DMapS.singleton fullImage (img, originAnchor)
 
 update' :: SomeEnv -> [Button] -> HicoProgram SomeEnv ()
 update' env buttons = do
@@ -44,24 +46,29 @@ update' env buttons = do
   }
 
 -- TODO: add current sprites to draw to SomeEnv
-draw' :: SomeEnv -> SpriteMap -> HicoProgram SomeEnv ()
+draw' :: SomeEnv -> Maybe SpriteMap -> HicoProgram SomeEnv ()
 draw' env spriteMap = do
   clear Black
-  mapM image (spriteMap DMapS.!? fullImage)
+  mapM image (getImages [fullImage] spriteMap)
   text x y "HELLO WORLD!" color
   where
     color = toEnum $ _color env
     x = _x env
     y = _y env
+    getImages :: [ImageId] -> Maybe SpriteMap -> [Sprite]
+    getImages ids sMapMaybe = concat $ fmap imgMapToSprite imgsWithMap
+      where
+        imgsWithMap :: [(SpriteMap, ImageId)]
+        imgsWithMap = [(m,i) | m <- (maybeToList sMapMaybe), i <- ids]
+        imgMapToSprite im =  maybeToList $ (fst im) DMapS.!? (snd im)
 
-
-exampleGame :: GameConfig -> Game SomeEnv
+exampleGame :: GameConfig -> Game SomeEnv SpriteMap
 exampleGame cfg = Game {
   initial = SomeEnv 0 0 0 [fullImage],
   config  = cfg,
   update  = update',
   draw    = draw',
-  sprites  = sprites'
+  ddata   = data'
 }
 
 main :: IO ()

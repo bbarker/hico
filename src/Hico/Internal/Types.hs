@@ -59,12 +59,12 @@ data SDLGameState state = SDLGameState {
 type HicoProgram state = StateT (SDLGameState state) IO
 type IsSpriteMap m = (Lens.At m, Lens.Index m ~ ImageId, Lens.IxValue m ~ Sprite)
 
-data Game e = forall m. IsSpriteMap m => Game {
+data Game e d = Game {
   initial :: e,
   config  :: GameConfig,
   update  :: e -> [Button] -> HicoProgram e (),
-  draw    :: e -> m -> HicoProgram e (),
-  sprites :: IO m
+  draw    :: e -> Maybe d -> HicoProgram e (),
+  ddata   :: IO (Maybe d)
 }
 
 type ImageBox = Rectangle Int
