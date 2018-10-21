@@ -62,7 +62,7 @@ gameLoop baseState game @ (Game initial config update draw ioData) = do
       update (_state gameState) (_buttons gameState)
       updatedState <- get
       draw updatedState ddata
-
+      SDL.present renderer
 
 handleAction :: Action -> HicoProgram state ()
 handleAction action = do
@@ -118,7 +118,6 @@ text x y s c = do
 
 image :: Sprite -> HicoProgram state ()
 image sprite = do
-  --let Just sprite = maybeSprite
   let (img, anchor) = sprite
   let Image surf = img
   let SDL.V2 x y = sdlPointToVec anchor
@@ -126,7 +125,7 @@ image sprite = do
   renderer <- _renderer <$> getSDLGameState
   screen   <- SDL.getWindowSurface window
   SDL.surfaceBlit surf Nothing screen Nothing
-  SDL.present renderer
+  return ()
 
 loadImage :: FilePath -> IO HicoImage
 loadImage fp = Image <$> SDL.Image.load fp
