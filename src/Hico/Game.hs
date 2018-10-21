@@ -29,7 +29,7 @@ import qualified SDL.Image
 import           System.Exit            (exitSuccess)
 
 
-runHicoGame :: Game e -> IO ()
+runHicoGame :: Game e d -> IO ()
 runHicoGame game = do
   SDL.initializeAll
   SDL.Font.initialize
@@ -42,14 +42,14 @@ runHicoGame game = do
 screenHeight = 480
 screenWidth = 640
 
-gameLoop :: SDLBaseState -> Game e -> IO ()
-gameLoop baseState game @ (Game initial config update draw sprites) = do
-  spriteMap <- sprites
-  void $ State.runStateT (op spriteMap) initialGameState
+gameLoop :: SDLBaseState -> Game e d -> IO ()
+gameLoop baseState game @ (Game initial config update draw ioData) = do
+  ddata <- ioData
+  void $ State.runStateT (op ddata) initialGameState
   where
     (window, renderer, font) = baseState
     initialGameState = (SDLGameState config window renderer font 0 [] initial)
-    op spriteMap = forever $ do
+    op ddata = forever $ do
       event <- SDL.pollEvent
       let action = actionFromEvent event
       
@@ -61,7 +61,7 @@ gameLoop baseState game @ (Game initial config update draw sprites) = do
       gameState <- getSDLGameState
       update (_state gameState) (_buttons gameState)
       updatedState <- get
-      draw updatedState spriteMap
+      draw updatedState ddata
 
 
 handleAction :: Action -> HicoProgram state ()
@@ -197,3 +197,4 @@ rendererConfig (GameConfig _ _ _ _ rtype) = SDL.RendererConfig
     SDL.rendererType  = rtype
   , SDL.rendererTargetTexture = False
   }
+

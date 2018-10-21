@@ -44,11 +44,19 @@ library
                      , symbol
   default-language:    Haskell2010
 
-executable hico
-  hs-source-dirs:      app
+executable jump
+  hs-source-dirs:      examples/JumpGame
   main-is:             Main.hs
   default-language:    Haskell2010
   build-depends:       base >= 4.7 && < 5
                      , hico
                      , containers
+                     , optparse-applicative
+
+executable hello
+  hs-source-dirs:      examples/Hello
+  main-is:             Main.hs
+  default-language:    Haskell2010
+  build-depends:       base >= 4.7 && < 5
+                     , hico
                      , optparse-applicative
