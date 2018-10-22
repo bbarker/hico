@@ -1,6 +1,5 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE OverloadedStrings     #-}
-{-# LANGUAGE TypeFamilies          #-}
 module Hico.Game (
     runHicoGame
   , getSDLGameState
@@ -10,6 +9,7 @@ module Hico.Game (
   , clear
   , text
   , image
+  , imageSection
   , loadImage
   , exit
 ) where
@@ -38,9 +38,6 @@ runHicoGame game = do
   renderer <- SDL.createRenderer window (-1) (rendererConfig $ config game)
   font <- SDL.Font.load defaultFontPath 16
   gameLoop (window, renderer, font) game
-
-screenHeight = 480
-screenWidth = 640
 
 gameLoop :: SDLBaseState -> Game e d -> IO ()
 gameLoop baseState game @ (Game initial config update draw ioData) = do
@@ -129,6 +126,14 @@ image sprite = do
 
 loadImage :: FilePath -> IO HicoImage
 loadImage fp = Image <$> SDL.Image.load fp
+
+-- TODO: a good candidate for liquid haskell
+imageSection :: HicoImage -> ImageBox -> HicoImage
+imageSection (Image surf) box                        =  ImageSeg surf box
+imageSection (ImageSeg surf boxOrig) box  =  ImageSeg surf box
+
+spriteSection :: Sprite -> ImageBox -> Sprite
+spriteSection (img, anchor) box = (imageSection img box, anchor)
 
 exit :: HicoProgram state ()
 exit = msg "Exiting Hico" >> liftIO exitSuccess

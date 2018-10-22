@@ -5,6 +5,8 @@ module Main where
 import           Hico
 import           Options.Applicative
 
+widthBaseCfg  = 320
+heightBaseCfg = 240
 
 data SomeEnv = SomeEnv {
   _x     :: Int,
@@ -64,5 +66,5 @@ main = doConfig =<< execParser opts
 
 doConfig :: CliConfig -> IO()
 doConfig runConf =
-  runHicoGame (exampleGame (processRunConfig runConf))
+  runHicoGame (exampleGame (processRunConfig runConf widthBaseCfg heightBaseCfg))
 

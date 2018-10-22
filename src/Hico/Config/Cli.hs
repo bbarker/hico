@@ -16,16 +16,13 @@ data CliConfig = CliConfig {
   renderer    :: Maybe RendererType
 }
 
-widthBaseCfg  = 320
-heightBaseCfg = 240
-
-processRunConfig :: CliConfig -> GameConfig
-processRunConfig (CliConfig wS _) | wS < 1  = error "Window Scale must be >= 1"
-processRunConfig raw = GameConfig {
-  widthBase    = widthBaseCfg
-  , heightBase = heightBaseCfg
-  , width      = floor (fromIntegral widthBaseCfg  * windowScale raw)
-  , height     = floor (fromIntegral heightBaseCfg * windowScale raw)
+processRunConfig :: CliConfig -> Int -> Int -> GameConfig
+processRunConfig (CliConfig wS _) _ _ | wS < 1  = error "Window Scale must be >= 1"
+processRunConfig raw widthIn heightIn = GameConfig {
+  widthBase    = widthIn
+  , heightBase = heightIn
+  , width      = floor (fromIntegral widthIn  * windowScale raw)
+  , height     = floor (fromIntegral heightIn * windowScale raw)
   , renderer   = fromMaybe defaultRendererType (rendererRaw raw)
 } where rendererRaw raw = renderer (raw:: CliConfig)
 
