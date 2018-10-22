@@ -3,12 +3,13 @@
 
 module Main where
 
-import           Control.Monad      (join)
 import           Hico
 import           Options.Applicative
 import qualified Data.Map.Strict        as DMapS
 import           Data.Maybe         (maybeToList)
--- TODO: abstract SDL Image load above
+
+widthBaseCfg  = 160
+heightBaseCfg = 120
 
 data SomeEnv = SomeEnv {
   _x       :: Int,
@@ -50,8 +51,9 @@ draw' :: SomeEnv -> Maybe SpriteMap -> HicoProgram SomeEnv ()
 draw' env spriteMap = do
   clear Black
   mapM image (getImages [fullImage] spriteMap)
-  text x y "HELLO WORLD!" color
+  return ()
   where
+    color :: Color
     color = toEnum $ _color env
     x = _x env
     y = _y env
@@ -83,7 +85,7 @@ main = do
 
 runWithConfig :: CliConfig -> IO()
 runWithConfig runConf =
-  runHicoGame (exampleGame (processRunConfig runConf))
+  runHicoGame (exampleGame (processRunConfig runConf widthBaseCfg heightBaseCfg))
 
 imagePath :: FilePath
 imagePath = "assets/images/jump_game_160x120.png"

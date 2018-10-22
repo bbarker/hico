@@ -1,12 +1,9 @@
-{-# LANGUAGE ConstraintKinds           #-}
 {-# LANGUAGE DuplicateRecordFields     #-}
-{-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE OverloadedStrings         #-}
-{-# LANGUAGE TypeFamilies               #-}
+
 module Hico.Internal.Types where
 
-import qualified Control.Lens        as Lens
 import           Control.Monad.State
 import           Data.Symbol         as Symbol
 --import           Foreign.C.Types        (CInt)
@@ -49,7 +46,7 @@ data Color
 data SDLGameState state = SDLGameState {
   _config     :: GameConfig,
   _window     :: Window,
-  _renderer   :: Renderer,
+  _rendere    :: Renderer,
   _font       :: SDL.Font,
   _frameCount :: Int,
   _buttons    :: [Button],
@@ -57,7 +54,6 @@ data SDLGameState state = SDLGameState {
 }
 
 type HicoProgram state = StateT (SDLGameState state) IO
-type IsSpriteMap m = (Lens.At m, Lens.Index m ~ ImageId, Lens.IxValue m ~ Sprite)
 
 data Game e d = Game {
   initial :: e,
