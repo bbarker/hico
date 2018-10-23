@@ -41,6 +41,7 @@ library
                      , sdl2
                      , sdl2-image
                      , sdl2-ttf
+                     , StateVar
                      , symbol
   default-language:    Haskell2010
 

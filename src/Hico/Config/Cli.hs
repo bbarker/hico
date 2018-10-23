@@ -12,7 +12,7 @@ import           SDL                 (RendererType (AcceleratedRenderer, Acceler
                                       defaultRenderer, rendererType)
 
 data CliConfig = CliConfig {
-  windowScale :: Float,
+  windowScale :: Int,
   renderer    :: Maybe RendererType
 }
 
@@ -21,12 +21,11 @@ processRunConfig (CliConfig wS _) _ _ | wS < 1  = error "Window Scale must be >=
 processRunConfig raw widthIn heightIn = GameConfig {
   widthBase    = widthIn
   , heightBase = heightIn
-  , width      = floor (fromIntegral widthIn  * windowScale raw)
-  , height     = floor (fromIntegral heightIn * windowScale raw)
+  , scale      = windowScale raw
   , renderer   = fromMaybe defaultRendererType (rendererRaw raw)
 } where rendererRaw raw = renderer (raw:: CliConfig)
 
-windowScaleP :: Parser Float
+windowScaleP :: Parser Int
 windowScaleP = option auto (
   long "scale"
   <> short 's'
