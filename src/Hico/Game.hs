@@ -17,9 +17,10 @@ module Hico.Game (
 import           Control.Monad        (forever, void)
 import           Control.Monad.IO.Class
 import qualified Control.Monad.State    as State hiding (state)
+import           Data.StateVar          (($=))
 import           Data.Text              (pack)
 import           Data.Word
-import           Foreign.C.Types        (CInt)
+import           Foreign.C.Types        (CFloat, CInt)
 import           Hico.Types
 import           Hico.Internal.InputHandling
 import           Prelude                hiding (log)
@@ -36,6 +37,8 @@ runHicoGame game = do
   SDL.Image.initialize [SDL.Image.InitPNG]
   window <- SDL.createWindow "My SDL Application" (windowConfig $ config game)
   renderer <- SDL.createRenderer window (-1) (rendererConfig $ config game)
+  (SDL.rendererLogicalSize renderer) $= Just (logicalSizeSDL (config game))
+  (SDL.rendererScale renderer) $= scaleSDL (config game)
   font <- SDL.Font.load defaultFontPath 16
   gameLoop (window, renderer, font) game
 
@@ -183,7 +186,7 @@ colorToRGB color = case color of
     
 
 windowConfig :: GameConfig -> SDL.WindowConfig
-windowConfig (GameConfig _ _ width height _) = SDL.WindowConfig
+windowConfig (GameConfig widthBase heightBase scale _) = SDL.WindowConfig
   { SDL.windowBorder       = True
   , SDL.windowHighDPI      = True
   , SDL.windowInputGrabbed = False
@@ -191,12 +194,22 @@ windowConfig (GameConfig _ _ width height _) = SDL.WindowConfig
   , SDL.windowOpenGL       = Nothing
   , SDL.windowPosition     = SDL.Wherever
   , SDL.windowResizable    = False
-  , SDL.windowInitialSize  = SDL.V2 (fromIntegral width) (fromIntegral height)
+  , SDL.windowInitialSize  =
+    SDL.V2 (fromIntegral (widthBase * scale)) (fromIntegral (heightBase * scale))
   , SDL.windowVisible      = True
   }
 
+logicalSizeSDL :: GameConfig -> SDL.V2 CInt
+logicalSizeSDL (GameConfig widthBase heightBase _ _ )
+  = SDL.V2 (fromIntegral widthBase) (fromIntegral heightBase)
+
+scaleSDL :: GameConfig -> SDL.V2 CFloat
+scaleSDL (GameConfig _ _ scale _) =
+  let floatScale = fromIntegral scale
+  in  SDL.V2 floatScale floatScale
+
 rendererConfig :: GameConfig -> SDL.RendererConfig
-rendererConfig (GameConfig _ _ _ _ rtype) = SDL.RendererConfig
+rendererConfig (GameConfig _ _ _ rtype) = SDL.RendererConfig
   {
     SDL.rendererType  = rtype
   , SDL.rendererTargetTexture = False

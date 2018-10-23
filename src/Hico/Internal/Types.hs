@@ -14,8 +14,7 @@ import           SDL.Font            as SDL
 data GameConfig = GameConfig {
   widthBase  :: Int,
   heightBase :: Int,
-  width      :: Int,
-  height     :: Int,
+  scale       :: Int,
   renderer   :: RendererType
 }
 
@@ -46,7 +45,7 @@ data Color
 data SDLGameState state = SDLGameState {
   _config     :: GameConfig,
   _window     :: Window,
-  _rendere    :: Renderer,
+  _renderer   :: Renderer,
   _font       :: SDL.Font,
   _frameCount :: Int,
   _buttons    :: [Button],
