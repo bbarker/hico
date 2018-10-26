@@ -67,6 +67,11 @@ data HicoImage
   = Image Surface
   | ImageSeg Surface ImageBox
 
+boxSize :: Integral a => Rectangle a -> V2 a
+boxSize box = let
+  Rectangle upperLeft widthHeight = box
+  in widthHeight
+
 type ScreenAnchor = Point V2 Int
 type Sprite = (HicoImage, ScreenAnchor)
 
