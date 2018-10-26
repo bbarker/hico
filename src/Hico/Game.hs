@@ -199,6 +199,11 @@ windowConfig (GameConfig widthBase heightBase scale _) = SDL.WindowConfig
   , SDL.windowVisible      = True
   }
 
+
+-- TODO: indead of using the following functions, scale individual surfaces
+-- Note: this will require we also upscale all image manipulations accordingly
+--   this may already be handled by https://wiki.libsdl.org/SDL_RenderSetScale
+
 logicalSizeSDL :: GameConfig -> SDL.V2 CInt
 logicalSizeSDL (GameConfig widthBase heightBase _ _ )
   = SDL.V2 (fromIntegral widthBase) (fromIntegral heightBase)
@@ -207,6 +212,35 @@ scaleSDL :: GameConfig -> SDL.V2 CFloat
 scaleSDL (GameConfig _ _ scale _) =
   let floatScale = fromIntegral scale
   in  SDL.V2 floatScale floatScale
+
+
+--TODO: clean this up, rename box values to reflect CInt or not
+scaleSurface :: SDL.Surface -> Maybe ImageBox -> Int -> HicoProgram state SDL.Surface
+scaleSurface surfIn box scale = do
+  surfInDims <- SDL.surfaceDimensions surfIn
+  boxFinal <- return $ getBoxFinal surfInDims
+  boxFinalScaled <- return $ fmap (fromIntegral . (*(fromIntegral scale))) boxFinal
+  sizeCIntScaled <- return $ boxSize boxFinalScaled
+  surfOut <- createScreenSurface sizeCIntScaled
+  _ <- SDL.surfaceBlitScaled surfIn (Just (fmap fromIntegral boxFinal)) surfOut (Just boxFinalScaled)
+  return surfOut
+  where
+    getBoxFinal :: SDL.V2 CInt -> ImageBox
+    getBoxFinal surfDims = case box of
+      Just b -> b
+      Nothing -> do
+        SDL.Rectangle origin (fmap fromIntegral surfDims)
+    origin :: SDL.Point SDL.V2 Int
+    origin = SDL.P (SDL.V2 0 0)
+
+createScreenSurface :: Integral a => SDL.V2 a -> HicoProgram state SDL.Surface
+createScreenSurface size = do
+  window   <- _window <$> getSDLGameState
+  screen   <- SDL.getWindowSurface window
+  sPixFmt  <- SDL.surfaceFormat screen
+  SDL.createRGBSurface sizeCInt SDL.RGB555 -- ??? not sure if a good choice
+  -- SDL.createRGBSurface sizeCInt sPixFmt --TODO: waiting for upstream
+  where sizeCInt = fmap fromIntegral size
 
 rendererConfig :: GameConfig -> SDL.RendererConfig
 rendererConfig (GameConfig _ _ _ rtype) = SDL.RendererConfig
