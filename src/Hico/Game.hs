@@ -37,8 +37,8 @@ runHicoGame game = do
   SDL.Image.initialize [SDL.Image.InitPNG]
   window <- SDL.createWindow "My SDL Application" (windowConfig $ config game)
   renderer <- SDL.createRenderer window (-1) (rendererConfig $ config game)
-  (SDL.rendererLogicalSize renderer) $= Just (logicalSizeSDL (config game))
-  (SDL.rendererScale renderer) $= scaleSDL (config game)
+  -- (SDL.rendererLogicalSize renderer) $= Just (logicalSizeSDL (config game))
+  -- (SDL.rendererScale renderer) $= scaleSDL (config game)
   font <- SDL.Font.load defaultFontPath 16
   gameLoop (window, renderer, font) game
 
@@ -213,17 +213,30 @@ scaleSDL (GameConfig _ _ scale _) =
   let floatScale = fromIntegral scale
   in  SDL.V2 floatScale floatScale
 
+--scaleSprite :: Sprite -> Int -> HicoProgram state Sprite
 
---TODO: clean this up, rename box values to reflect CInt or not
-scaleSurface :: SDL.Surface -> Maybe ImageBox -> Int -> HicoProgram state SDL.Surface
+scaleImage :: HicoImage -> Int -> HicoProgram state HicoImage
+scaleImage imgIn scale = do
+  (surfOut, mBoxOut) <- scaleSurface surf box scale
+  return $ case (imgIn, mBoxOut) of
+    (ImageSeg surf _, Just boxOut) -> ImageSeg surfOut boxOut
+    (ImageSeg surf _, Nothing)     -> Image surfOut
+    (Image surf, _)                -> Image surfOut
+  where
+    (surf, box) = case imgIn of ImageSeg surf ibox -> (surf, Just ibox)
+                                Image surf         -> (surf, Nothing)
+
+scaleSurface :: SDL.Surface -> Maybe ImageBox -> Int -> 
+  HicoProgram state (SDL.Surface, Maybe ImageBox)
 scaleSurface surfIn box scale = do
   surfInDims <- SDL.surfaceDimensions surfIn
-  boxFinal <- return $ getBoxFinal surfInDims
-  boxFinalScaled <- return $ fmap (fromIntegral . (*(fromIntegral scale))) boxFinal
-  sizeCIntScaled <- return $ boxSize boxFinalScaled
+  boxOut <- return $ getBoxFinal surfInDims
+  boxOutScaled <- return $ fmap (*scale) boxOut
+  boxOutScaledC <- return $ fmap fromIntegral boxOutScaled
+  sizeCIntScaled <- return $ boxSize boxOutScaledC
   surfOut <- createScreenSurface sizeCIntScaled
-  _ <- SDL.surfaceBlitScaled surfIn (Just (fmap fromIntegral boxFinal)) surfOut (Just boxFinalScaled)
-  return surfOut
+  _ <- SDL.surfaceBlitScaled surfIn (Just (fmap fromIntegral boxOut)) surfOut (Just boxOutScaledC)
+  return (surfOut, fmap (\b -> boxOutScaled) box)
   where
     getBoxFinal :: SDL.V2 CInt -> ImageBox
     getBoxFinal surfDims = case box of
