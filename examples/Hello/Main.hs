@@ -36,7 +36,7 @@ update' env buttons = do
     , _y = newY
   }
 
-draw' :: SomeEnv -> Maybe () -> HicoProgram SomeEnv ()
+draw' :: SomeEnv -> () -> HicoProgram SomeEnv ()
 draw' env _ = do
   clear Black
   text x y "HELLO WORLD!" color
@@ -52,7 +52,7 @@ exampleGame cfg = Game {
   config  = cfg,
   update  = update',
   draw    = draw',
-  ddata   = return Nothing
+  ddata   = return ()
 }
 
 main :: IO ()

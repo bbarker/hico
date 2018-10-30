@@ -27,10 +27,10 @@ handleInput (SomeEnv x y _ _) button =
     BtnRight -> (x + 1, y)
 
 type SpriteMap = DMapS.Map ImageId Sprite
-data' :: IO (Maybe SpriteMap)
+data' :: IO SpriteMap
 data' = do
   img <- loadImage imagePath
-  return $ Just $ DMapS.singleton fullImage (img, originAnchor)
+  return $ DMapS.singleton fullImage (img, originAnchor)
 
 update' :: SomeEnv -> [Button] -> HicoProgram SomeEnv ()
 update' env buttons = do
@@ -47,10 +47,10 @@ update' env buttons = do
   }
 
 -- TODO: add current sprites to draw to SomeEnv
-draw' :: SomeEnv -> Maybe SpriteMap -> HicoProgram SomeEnv ()
+draw' :: SomeEnv -> SpriteMap -> HicoProgram SomeEnv ()
 draw' env spriteMap = do
   clear Black
-  mapM image (getImages [fullImage] spriteMap)
+  mapM image (getImages [fullImage] (Just spriteMap)) -- TODO: remove Maybe in getImages
   return ()
   where
     color :: Color
