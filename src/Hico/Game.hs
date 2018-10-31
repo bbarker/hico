@@ -213,7 +213,13 @@ scaleSDL (GameConfig _ _ scale _) =
   let floatScale = fromIntegral scale
   in  SDL.V2 floatScale floatScale
 
---scaleSprite :: Sprite -> Int -> HicoProgram state Sprite
+scaleSprite :: Sprite -> Int -> HicoProgram state Sprite
+scaleSprite sprite scale = do
+  imgScaled <- scaleImage img scale
+  return (imgScaled, anchorScaled) 
+  where
+    (img, anchor) = sprite
+    anchorScaled = fmap (*scale) anchor
 
 scaleImage :: HicoImage -> Int -> HicoProgram state HicoImage
 scaleImage imgIn scale = do
