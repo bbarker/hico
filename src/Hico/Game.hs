@@ -11,6 +11,8 @@ module Hico.Game (
   , image
   , imageSection
   , loadImage
+  , scaleImage
+  , scaleSprite
   , exit
 ) where
 
@@ -44,12 +46,12 @@ runHicoGame game = do
 
 gameLoop :: SDLBaseState -> Game e d -> IO ()
 gameLoop baseState game @ (Game initial config update draw ioData) = do
-  ddata <- ioData
-  void $ State.runStateT (op ddata) initialGameState
+  void $ State.runStateT op initialGameState
   where
     (window, renderer, font) = baseState
     initialGameState = (SDLGameState config window renderer font 0 [] initial)
-    op ddata = forever $ do
+    op = forever $ do
+      ddata <- ioData
       event <- SDL.pollEvent
       let action = actionFromEvent event
       
@@ -127,8 +129,11 @@ image sprite = do
   SDL.surfaceBlit surf Nothing screen Nothing
   return ()
 
-loadImage :: FilePath -> IO HicoImage
-loadImage fp = Image <$> SDL.Image.load fp
+loadImage :: MonadIO m => FilePath -> m HicoImage
+loadImage fpath = liftIO $ loadImage fpath
+  where
+    loadImg :: FilePath -> IO HicoImage
+    loadImg fp = Image <$> SDL.Image.load fp
 
 -- TODO: a good candidate for liquid haskell
 imageSection :: HicoImage -> ImageBox -> HicoImage

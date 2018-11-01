@@ -27,10 +27,11 @@ handleInput (SomeEnv x y _ _) button =
     BtnRight -> (x + 1, y)
 
 type SpriteMap = DMapS.Map ImageId Sprite
-data' :: IO SpriteMap
+data' :: HicoProgram state SpriteMap
 data' = do
   img <- loadImage imagePath
-  return $ DMapS.singleton fullImage (img, originAnchor)
+  scaledImg <- scaleImage img (2::Int) -- using 2 as a fixed test for now
+  return $ DMapS.singleton fullImage (scaledImg, originAnchor)
 
 update' :: SomeEnv -> [Button] -> HicoProgram SomeEnv ()
 update' env buttons = do
