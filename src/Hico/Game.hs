@@ -130,10 +130,7 @@ image sprite = do
   return ()
 
 loadImage :: MonadIO m => FilePath -> m HicoImage
-loadImage fpath = liftIO $ loadImage fpath
-  where
-    loadImg :: FilePath -> IO HicoImage
-    loadImg fp = Image <$> SDL.Image.load fp
+loadImage fpath = liftIO $ Image <$> SDL.Image.load fpath
 
 -- TODO: a good candidate for liquid haskell
 imageSection :: HicoImage -> ImageBox -> HicoImage
