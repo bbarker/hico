@@ -1,5 +1,7 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+
 module Hico.Game (
     runHicoGame
   , getSDLGameState
@@ -23,14 +25,20 @@ import           Data.StateVar          (($=))
 import           Data.Text              (pack)
 import           Data.Word
 import           Foreign.C.Types        (CFloat, CInt)
+import           Foreign.Ptr
+import           Foreign.Storable
 import           Hico.Types
 import           Hico.Internal.InputHandling
 import           Prelude                hiding (log)
 import qualified SDL                    as SDL 
 import qualified SDL.Font
 import qualified SDL.Image
+import           SDL.Internal.Numbered
+import qualified SDL.Internal.Types     (Window(..))
+import qualified SDL.Raw
+import           SDL.Raw.Video          (getWindowPixelFormat)
+import qualified SDL.Video.Renderer
 import           System.Exit            (exitSuccess)
-
 
 runHicoGame :: Game e d -> IO ()
 runHicoGame game = do
@@ -188,17 +196,17 @@ colorToRGB color = case color of
     
 
 windowConfig :: GameConfig -> SDL.WindowConfig
-windowConfig (GameConfig widthBase heightBase scale _) = SDL.WindowConfig
-  { SDL.windowBorder       = True
-  , SDL.windowHighDPI      = True
-  , SDL.windowInputGrabbed = False
-  , SDL.windowMode         = SDL.Windowed
-  , SDL.windowOpenGL       = Nothing
-  , SDL.windowPosition     = SDL.Wherever
-  , SDL.windowResizable    = False
-  , SDL.windowInitialSize  =
-    SDL.V2 (fromIntegral (widthBase * scale)) (fromIntegral (heightBase * scale))
-  , SDL.windowVisible      = True
+windowConfig (GameConfig wBase hBase scale _) = SDL.WindowConfig
+  { SDL.windowBorder          = True
+  , SDL.windowHighDPI         = True
+  , SDL.windowInputGrabbed    = False
+  , SDL.windowMode            = SDL.Windowed
+  , SDL.windowGraphicsContext = SDL.NoGraphicsContext
+  , SDL.windowPosition        = SDL.Wherever
+  , SDL.windowResizable       = False
+  , SDL.windowInitialSize     =
+    SDL.V2 (fromIntegral (wBase * scale)) (fromIntegral (hBase * scale))
+  , SDL.windowVisible         = True
   }
 
 
@@ -206,14 +214,18 @@ windowConfig (GameConfig widthBase heightBase scale _) = SDL.WindowConfig
 -- Note: this will require we also upscale all image manipulations accordingly
 --   this may already be handled by https://wiki.libsdl.org/SDL_RenderSetScale
 
+{- -- Not used
 logicalSizeSDL :: GameConfig -> SDL.V2 CInt
 logicalSizeSDL (GameConfig widthBase heightBase _ _ )
   = SDL.V2 (fromIntegral widthBase) (fromIntegral heightBase)
+-}
 
+{- -- Not used
 scaleSDL :: GameConfig -> SDL.V2 CFloat
 scaleSDL (GameConfig _ _ scale _) =
   let floatScale = fromIntegral scale
   in  SDL.V2 floatScale floatScale
+-}
 
 scaleSprite :: Sprite -> Int -> HicoProgram state Sprite
 scaleSprite sprite scale = do
@@ -225,14 +237,16 @@ scaleSprite sprite scale = do
 
 scaleImage :: HicoImage -> Int -> HicoProgram state HicoImage
 scaleImage imgIn scale = do
+  -- FIXME: working:     <- return (surf, box)
+  -- FIXME: NOT working: <- scaleSurface surf box scale
   (surfOut, mBoxOut) <- scaleSurface surf box scale
   return $ case (imgIn, mBoxOut) of
-    (ImageSeg surf _, Just boxOut) -> ImageSeg surfOut boxOut
-    (ImageSeg surf _, Nothing)     -> Image surfOut
-    (Image surf, _)                -> Image surfOut
+    (ImageSeg _ _, Just boxOut) -> ImageSeg surfOut boxOut
+    (ImageSeg _ _, Nothing)     -> Image surfOut
+    (Image _, _)                -> Image surfOut
   where
-    (surf, box) = case imgIn of ImageSeg surf ibox -> (surf, Just ibox)
-                                Image surf         -> (surf, Nothing)
+    (surf, box) = case imgIn of ImageSeg sf ibox -> (sf, Just ibox)
+                                Image sf         -> (sf, Nothing)
 
 scaleSurface :: SDL.Surface -> Maybe ImageBox -> Int -> 
   HicoProgram state (SDL.Surface, Maybe ImageBox)
@@ -244,7 +258,7 @@ scaleSurface surfIn box scale = do
   sizeCIntScaled <- return $ boxSize boxOutScaledC
   surfOut <- createScreenSurface sizeCIntScaled
   _ <- SDL.surfaceBlitScaled surfIn (Just (fmap fromIntegral boxOut)) surfOut (Just boxOutScaledC)
-  return (surfOut, fmap (\b -> boxOutScaled) box)
+  return (surfOut, return boxOutScaled)
   where
     getBoxFinal :: SDL.V2 CInt -> ImageBox
     getBoxFinal surfDims = case box of
@@ -257,12 +271,15 @@ scaleSurface surfIn box scale = do
 createScreenSurface :: Integral a => SDL.V2 a -> HicoProgram state SDL.Surface
 createScreenSurface size = do
   window   <- _window <$> getSDLGameState
-  screen   <- SDL.getWindowSurface window
-  sPixFmt  <- SDL.surfaceFormat screen
-  SDL.createRGBSurface sizeCInt SDL.RGB555 -- ??? not sure if a good choice
-  -- SDL.createRGBSurface sizeCInt sPixFmt --TODO: waiting for upstream
-  where sizeCInt = fmap fromIntegral size
-
+  rawPixFmt <- getWindowPixelFormat $ rawWindow window
+  let pixFmt :: SDL.Video.Renderer.PixelFormat = fromNumber rawPixFmt
+  SDL.createRGBSurface sizeCInt pixFmt
+  where
+    sizeCInt = fmap fromIntegral size
+    rawWindow :: SDL.Window -> SDL.Raw.Window
+    rawWindow win = rw
+      where SDL.Internal.Types.Window (rw) = win
+    
 rendererConfig :: GameConfig -> SDL.RendererConfig
 rendererConfig (GameConfig _ _ _ rtype) = SDL.RendererConfig
   {
@@ -270,3 +287,13 @@ rendererConfig (GameConfig _ _ _ rtype) = SDL.RendererConfig
   , SDL.rendererTargetTexture = False
   }
 
+-- TODO figure out how to get from Raw.PixelFormat to Word32
+-- NOTE currently using getWindowPixelFormat in createScreenSurface
+{-
+surfPixFmt2PixFmt  :: SurfacePixelFormat -> IO SDL.PixelFormat
+surfPixFmt2PixFmt sPixFmt = do
+  rpf <- peek ptrRPF
+  fromNumber rpf
+    where
+      SurfacePixelFormat ptrRPF = sPixFmt
+-} 

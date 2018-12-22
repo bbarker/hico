@@ -31,6 +31,8 @@ library
                      -funbox-strict-fields
                      -fexpose-all-unfoldings
                      -fspecialise-aggressively
+                     -Werror=missing-fields
+                     -Wall
   build-depends:       base >= 4.7 && < 5
                      , bytestring
                      , text

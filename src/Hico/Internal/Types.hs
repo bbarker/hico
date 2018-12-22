@@ -12,10 +12,10 @@ import           SDL                 as SDL
 import           SDL.Font            as SDL
 
 data GameConfig = GameConfig {
-  widthBase  :: Int,
-  heightBase :: Int,
-  scale       :: Int,
-  renderer   :: RendererType
+  widthBase       :: Int,
+  heightBase      :: Int,
+  gameWindowScale :: Int,
+  renderer        :: RendererType
 }
 
 data Action = KeyInput KeyMotion | Idle | Quit
@@ -69,7 +69,7 @@ data HicoImage
 
 boxSize :: Integral a => Rectangle a -> V2 a
 boxSize box = let
-  Rectangle upperLeft widthHeight = box
+  Rectangle _ widthHeight = box
   in widthHeight
 
 type ScreenAnchor = Point V2 Int

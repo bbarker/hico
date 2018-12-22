@@ -34,6 +34,7 @@ resolver: lts-12.22
 #  - auto-update
 #  - wai
 packages:
+- ../sdl2
 - .
 # Dependency packages to be pulled from upstream that are not in the resolver
 # using the same syntax as the packages field.
@@ -66,3 +67,5 @@ packages:
 
 nix:
   packages: [gmp, pkgconfig, SDL2, SDL2_image, SDL2_ttf]
+
+dump-logs: warning

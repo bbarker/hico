@@ -19,10 +19,10 @@ data CliConfig = CliConfig {
 processRunConfig :: CliConfig -> Int -> Int -> GameConfig
 processRunConfig (CliConfig wS _) _ _ | wS < 1  = error "Window Scale must be >= 1"
 processRunConfig raw widthIn heightIn = GameConfig {
-  widthBase    = widthIn
-  , heightBase = heightIn
-  , scale      = windowScale raw
-  , renderer   = fromMaybe defaultRendererType (rendererRaw raw)
+  widthBase         = widthIn
+  , heightBase      = heightIn
+  , gameWindowScale = windowScale raw
+  , renderer        = fromMaybe defaultRendererType (rendererRaw raw)
 } where rendererRaw raw = renderer (raw:: CliConfig)
 
 windowScaleP :: Parser Int
